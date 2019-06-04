@@ -9,8 +9,11 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 
 import java.util.LinkedList;
+import java.util.Optional;
 
 public class Controller {
+    @FXML
+    Button parallelButton;
     @FXML
     Canvas canvas;
     @FXML
@@ -46,7 +49,11 @@ public class Controller {
     private LinkedList<Cutter> cutters = new LinkedList<>();
     private boolean isConvex;
     private int direction = -1;
-
+    private int edgeNumber = 0;
+    private boolean begParallelInit = false;
+    private double tan = 0;
+    private int xb;
+    private int yb;
     @FXML
     public void initialize() {
         setupColors();
@@ -84,6 +91,32 @@ public class Controller {
                 setAlert("Введены неверные данные для нового отсекателя");
             }
         });
+        parallelButton.addEventHandler(MouseEvent.MOUSE_CLICKED, mouseEvent -> {
+            if (cutters.size() != 0) {
+                TextInputDialog dialog = new TextInputDialog();
+                dialog.setTitle("Введите номер ребра");
+                dialog.setContentText("Номер");
+                dialog.setHeaderText("Введите номер ребра");
+                Optional<String> result = dialog.showAndWait();
+                result.ifPresent(number -> {
+                    this.edgeNumber = Integer.parseInt(number);
+                    Point beg;
+                    Point end;
+
+                    if (edgeNumber < cutter.size() - 1) {
+                        beg = cutter.get(edgeNumber);
+                        end = cutter.get(edgeNumber + 1);
+                        tan = (end.getY() - beg.getY()) / (end.getX() - beg.getX());
+                    } else if (edgeNumber == cutter.size() - 1) {
+                        beg = cutter.get(edgeNumber);
+                        end = cutter.get(0);
+                        tan = (end.getY() - beg.getY()) / (end.getX() - beg.getX());
+                    }
+                });
+            } else {
+                setAlert("Нет отсекателя");
+            }
+        });
     }
 
     private void setupCanvasListeners() {
@@ -92,24 +125,28 @@ public class Controller {
             boolean hasShift = e.isShiftDown();
             boolean hasControl = e.isControlDown();
 
-
-            if (b == MouseButton.PRIMARY && hasShift && hasControl) {
-                //Прямая
-                addPoint((int) e.getX(), (int) e.getY());
-            } else if (b == MouseButton.PRIMARY && hasShift) {
-                // горизонтальная
-                addPointHorizontal((int) e.getX(), (int) e.getY());
-            } else if (b == MouseButton.PRIMARY && hasControl) {
-                // вертикальная
-                addPointVertical((int) e.getX(), (int) e.getY());
-            } else if (b == MouseButton.PRIMARY) {
-                addPoint((int) e.getX(), (int) e.getY());
-                // Прямая
-            } else if (b == MouseButton.SECONDARY && hasControl) {
-                addCutterPoint(new Point(e.getX(), e.getY()));
-            } else if (b == MouseButton.SECONDARY) {
-                closeCutter();
+            if (!begParallelInit) {
+                if (b == MouseButton.PRIMARY && hasShift && hasControl) {
+                    //Прямая
+                    addPointParallel((int) e.getX(), (int) e.getY());
+                } else if (b == MouseButton.PRIMARY && hasShift) {
+                    // горизонтальная
+                    addPointHorizontal((int) e.getX(), (int) e.getY());
+                } else if (b == MouseButton.PRIMARY && hasControl) {
+                    // вертикальная
+                    addPointVertical((int) e.getX(), (int) e.getY());
+                } else if (b == MouseButton.PRIMARY) {
+                    addPoint((int) e.getX(), (int) e.getY());
+                    // Прямая
+                } else if (b == MouseButton.SECONDARY && hasControl) {
+                    addCutterPoint(new Point(e.getX(), e.getY()));
+                } else if (b == MouseButton.SECONDARY) {
+                    closeCutter();
+                }
+            } else {
+                addPointParallel((int) e.getX(), (int) e.getY());
             }
+
             doUpdate();
 
         });
@@ -171,6 +208,21 @@ public class Controller {
         edges.clear();
         cutters.clear();
         cutter.clear();
+    }
+
+    private void addPointParallel(int x, int y) {
+        if (cutters.size() > 0) {
+
+            if (!begParallelInit) {
+                addPoint(x, y);
+                begParallelInit = true;
+                this.xb = x;
+                this.yb = y;
+            } else {
+                addPoint(x, yb + tan * (x - xb));
+                begParallelInit = false;
+            }
+        }
     }
 
     private void addPointHorizontal(int x, int y) {
