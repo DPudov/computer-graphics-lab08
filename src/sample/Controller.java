@@ -54,6 +54,7 @@ public class Controller {
     private double tan = 0;
     private int xb;
     private int yb;
+
     @FXML
     public void initialize() {
         setupColors();
@@ -325,47 +326,51 @@ public class Controller {
     }
 
     private void cutCyrusBeck(Cutter cutter, Edge edge, int n) {
-        double tb = 0;
-        double te = 1;
-        Point D = new Point(edge.getEnd().getX() - edge.getBegin().getX(),
+        double tLimitBegin = 0;
+        double tLimitEnd = 1;
+        Point directriss = new Point(edge.getEnd().getX() - edge.getBegin().getX(),
                 edge.getEnd().getY() - edge.getBegin().getY());
 
         for (int i = 0; i < cutter.size() - 1; i++) {
-            Point W = new Point(edge.getBegin().getX() - cutter.get(i).getX(),
+            Point weightSide = new Point(edge.getBegin().getX() - cutter.get(i).getX(),
                     edge.getBegin().getY() - cutter.get(i).getY());
-            Point N = new Point(-n * (cutter.get(i + 1).getY() - cutter.get(i).getY()),
+            Point normalSide = new Point(-n * (cutter.get(i + 1).getY() - cutter.get(i).getY()),
                     n * (cutter.get(i + 1).getX() - cutter.get(i).getX()));
 
-            double Dscalar = scalarMulti(D, N);
-            double Wscalar = scalarMulti(W, N);
+            double directrissScalar = scalarMulti(directriss, normalSide);
+            double weightScalar = scalarMulti(weightSide, normalSide);
 
-            if (Dscalar == 0) {
-                if (Wscalar < 0) {
+            if (directrissScalar == 0) {
+                if (weightScalar < 0) {
+                    // обработать следующий отрезок
                     return;
                 }
             } else {
-                double t = -Wscalar / Dscalar;
-                if (Dscalar > 0) {
+                double t = -weightScalar / directrissScalar;
+                if (directrissScalar > 0) {
                     if (t > 1) {
+                        // обработать следующий отрезок
                         return;
-                    } else {
-                        tb = Math.max(tb, t);
                     }
-                } else if (Dscalar < 0) {
+                    tLimitBegin = Math.max(tLimitBegin, t);
+
+                } else if (directrissScalar < 0) {
                     if (t < 0) {
+                        // обработать следующий отрезок
                         return;
-                    } else {
-                        te = Math.min(te, t);
                     }
+                    tLimitEnd = Math.min(tLimitEnd, t);
+
                 }
             }
         }
 
-        if (tb <= te) {
-            double xBegin = edge.getBegin().getX() + (edge.getEnd().getX() - edge.getBegin().getX()) * te;
-            double yBegin = edge.getBegin().getY() + (edge.getEnd().getY() - edge.getBegin().getY()) * te;
-            double xEnd = edge.getBegin().getX() + (edge.getEnd().getX() - edge.getBegin().getX()) * tb;
-            double yEnd = edge.getBegin().getY() + (edge.getEnd().getY() - edge.getBegin().getY()) * tb;
+        // проверка фактической видимости отрезка
+        if (tLimitBegin <= tLimitEnd) {
+            double xBegin = edge.getBegin().getX() + (edge.getEnd().getX() - edge.getBegin().getX()) * tLimitEnd;
+            double yBegin = edge.getBegin().getY() + (edge.getEnd().getY() - edge.getBegin().getY()) * tLimitEnd;
+            double xEnd = edge.getBegin().getX() + (edge.getEnd().getX() - edge.getBegin().getX()) * tLimitBegin;
+            double yEnd = edge.getBegin().getY() + (edge.getEnd().getY() - edge.getBegin().getY()) * tLimitBegin;
             LineDrawer.DigitalDiffAnalyzeDraw(canvas, xBegin, yBegin, xEnd, yEnd, visiblePicker.getValue());
         }
     }

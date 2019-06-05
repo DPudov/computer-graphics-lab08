@@ -14,7 +14,7 @@ public class Cutter {
 
     public boolean isConvex() {
         int size = vertices.size();
-        ArrayList<Double> vectors = new ArrayList<>();
+        ArrayList<Double> vectorsMultiplex = new ArrayList<>();
         int sign = 0;
         if (size < 3) {
             setSign(sign);
@@ -25,31 +25,31 @@ public class Cutter {
             Point pointCur;
             Point pointPrev;
             Point pointNext;
-            Point vectorAb;
-            Point vectorBc;
+            Point vectorPrevCur;
+            Point vectorCurNext;
             if (i < size - 1) {
                 pointCur = vertices.get(i);
                 pointPrev = vertices.get(i - 1);
                 pointNext = vertices.get(i + 1);
-                vectorAb = new Point(pointCur.getX() - pointPrev.getX(),
+                vectorPrevCur = new Point(pointCur.getX() - pointPrev.getX(),
                         pointCur.getY() - pointPrev.getY());
-                vectorBc = new Point(pointNext.getX() - pointCur.getX(),
+                vectorCurNext = new Point(pointNext.getX() - pointCur.getX(),
                         pointNext.getY() - pointCur.getY());
 
             } else {
                 pointCur = vertices.get(i);
                 pointPrev = vertices.get(i - 1);
-                vectorAb = new Point(pointCur.getX() - pointPrev.getX(),
+                vectorPrevCur = new Point(pointCur.getX() - pointPrev.getX(),
                         pointCur.getY() - pointPrev.getY());
-                vectorBc = new Point(vertices.get(1).getX() - vertices.get(0).getX(),
+                vectorCurNext = new Point(vertices.get(1).getX() - vertices.get(0).getX(),
                         vertices.get(1).getY() - vertices.get(0).getY());
             }
 
-            vectors.add(vectorAb.getX() * vectorBc.getY() - vectorAb.getY() * vectorBc.getX());
+            vectorsMultiplex.add(vectorPrevCur.getX() * vectorCurNext.getY() - vectorPrevCur.getY() * vectorCurNext.getX());
         }
 
         boolean exist = false;
-        for (Double d : vectors) {
+        for (Double d : vectorsMultiplex) {
             if (d == 0) {
                 continue;
             }
