@@ -328,12 +328,13 @@ public class Controller {
     private void cutCyrusBeck(Cutter cutter, Edge edge, int n) {
         double tLimitBegin = 0;
         double tLimitEnd = 1;
-        Point directriss = new Point(edge.getEnd().getX() - edge.getBegin().getX(),
-                edge.getEnd().getY() - edge.getBegin().getY());
+        Point begin = edge.getBegin();
+        Point directriss = new Point(edge.getEnd().getX() - begin.getX(),
+                edge.getEnd().getY() - begin.getY());
 
         for (int i = 0; i < cutter.size() - 1; i++) {
-            Point weightSide = new Point(edge.getBegin().getX() - cutter.get(i).getX(),
-                    edge.getBegin().getY() - cutter.get(i).getY());
+            Point weightSide = new Point(begin.getX() - cutter.get(i).getX(),
+                    begin.getY() - cutter.get(i).getY());
             Point normalSide = new Point(-n * (cutter.get(i + 1).getY() - cutter.get(i).getY()),
                     n * (cutter.get(i + 1).getX() - cutter.get(i).getX()));
 
